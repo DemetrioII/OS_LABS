@@ -7,7 +7,6 @@
 #include <time.h>
 #include <string.h>
 
-// Глобальная переменная для ограничения потоков
 int MAX_THREADS = 4;
 
 int min(int x, int y) {
@@ -94,18 +93,8 @@ void* recalculate_centroids(void *arg) {
     return NULL;
 }
 
-void print_usage(const char* program_name) {
-    printf("Использование: %s [-t MAX_THREADS]\n", program_name);
-    printf("Опции:\n");
-    printf("  -t MAX_THREADS  Ограничение максимального количества потоков (по умолчанию: 4)\n");
-    printf("  -h              Показать эту справку\n");
-    printf("\nПример:\n");
-    printf("  %s -t 2        # Максимум 2 потока\n", program_name);
-    printf("  %s             # По умолчанию 4 потока\n", program_name);
-}
 
 int main(int argc, char *argv[]) {
-    // Обработка аргументов командной строки
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-t") == 0 && i + 1 < argc) {
             MAX_THREADS = atoi(argv[i + 1]);
@@ -114,12 +103,9 @@ int main(int argc, char *argv[]) {
                 return 1;
             }
             i++;
-        } else if (strcmp(argv[i], "-h") == 0) {
-            print_usage(argv[0]);
-            return 0;
-        } else {
+        }
+        else {
             fprintf(stderr, "Неизвестный аргумент: %s\n", argv[i]);
-            print_usage(argv[0]);
             return 1;
         }
     }
