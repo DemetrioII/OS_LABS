@@ -1,0 +1,17 @@
+parent.c: In function 'int main()':
+parent.c:18:26: warning: ISO C++ forbids converting a string constant to 'char*' [-Wwrite-strings]
+   18 |         char *filename = "FileMapping";
+      |                          ^~~~~~~~~~~~~
+parent.c:40:35: error: invalid conversion from 'void*' to 'shared_data_t*' [-fpermissive]
+   40 |         shared_data_t *data = mmap(NULL, sizeof(shared_data_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd, 0);
+      |                               ~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                   |
+      |                                   void*
+parent.c:42:37: error: invalid conversion from 'void*' to 'shared_data_t*' [-fpermissive]
+   42 |         shared_data_t *errors = mmap(NULL, sizeof(shared_data_t), PROT_READ | PROT_WRITE, MAP_SHARED, fd_errors, 0);
+      |                                 ~~~~^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+      |                                     |
+      |                                     void*
+parent.c:111:33: warning: ISO C++ forbids converting a string constant to 'char*' [-Wwrite-strings]
+  111 |                 char *args[] = {"./child", filename, NULL};
+      |                                 ^~~~~~~~~
