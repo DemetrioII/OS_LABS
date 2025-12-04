@@ -5,14 +5,21 @@
 #include <sys/mman.h>
 #include <string.h>
 #include <sys/wait.h>
+#include <signal.h>
 
-#define MAX_LEN 1024
+#define MAX_LEN 4096
+
+volatile sig_atomic_t child_done = 0;
 
 typedef struct {
 	char message[MAX_LEN];
 	int has_message;
 	int terminate;
 } shared_data_t;
+
+void handler_parent(int sig) { 
+	child_done = 1;
+}
 
 int main() {
 	char *filename = "FileMapping";
@@ -50,6 +57,16 @@ int main() {
 	data->has_message = 0;
 	data->terminate = 0;
 
+	char *s = NULL;
+	size_t len = 0;
+	getline(&s, &len, stdin);
+
+	if (s[strlen(s) - 1] == '\n') {
+		s[strlen(s) - 1] = '\0';
+	}
+	strncpy(data->message, s, 255);
+
+	signal(SIGUSR2, handler_parent);
 	pid_t pid = fork();
 
 	if (pid == -1) {
@@ -60,10 +77,6 @@ int main() {
 	}
 
 	if (pid > 0) {
-		char *s = NULL;
-		size_t len = 0;
-		// getline(&s, &len, stdin);
-
 		while (1) {
 			fflush(stdout);
 
@@ -80,6 +93,7 @@ int main() {
 			if (strcmp(s, "exit") == 0) {
 				data->has_message = 1;
 				data->terminate = 1;
+				kill(pid, SIGUSR1);
 				break;
 			}
 
@@ -92,9 +106,14 @@ int main() {
 			data->has_message = 1;
 
 			printf("Отправлено через File Mapping: %s\n", s);
+			kill(pid, SIGUSR1);
 
-			while (!errors->has_message && !errors->terminate) {
+			/*while (!errors->has_message && !errors->terminate) {
 				usleep(10000);
+			}*/
+			child_done = 0;
+			while (!child_done) {
+				pause();
 			}
 
 			if (errors->has_message)
