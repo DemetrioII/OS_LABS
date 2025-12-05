@@ -1,0 +1,4 @@
+program2.c: In function ‘int main()’:
+program2.c:84:49: warning: statement has no effect [-Wunused-value]
+   84 |                 command[strcspn(command, "\n")] == 0;
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~
