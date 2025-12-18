@@ -1,6 +1,12 @@
-message_queue.c: In function ‘int enqueue_message(MessageQueue*, MessageType, const char*, const char*, const char*)’:
-message_queue.c:29:32: error: invalid conversion from ‘void*’ to ‘QueuedMessage*’ [-fpermissive]
-   29 |     QueuedMessage* msg = malloc(sizeof(QueuedMessage));
-      |                          ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
-      |                                |
-      |                                void*
+server.c: In function ‘void save_message_to_history(const char*, const char*, const char*)’:
+server.c:115:17: error: invalid conversion from ‘void*’ to ‘char*’ [-fpermissive]
+  115 |     char *end = map;
+      |                 ^~~
+      |                 |
+      |                 void*
+server.c: In function ‘int main()’:
+server.c:610:44: error: invalid conversion from ‘void*’ to ‘int*’ [-fpermissive]
+  610 |                 int* client_fd_ptr = malloc(sizeof(int));
+      |                                      ~~~~~~^~~~~~~~~~~~~
+      |                                            |
+      |                                            void*

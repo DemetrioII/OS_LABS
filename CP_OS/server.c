@@ -160,39 +160,81 @@ void search_in_history(int fd, const char* username, const char* keyword) {
     int found_count = 0;
     int total_messages = 0;
     
-    printf("[SEARCH] Поиск для пользователя '%s' по ключевому слову '%s'\n", username, keyword);
+    printf("[SEARCH] Поиск ТОЛЬКО в тексте сообщений для '%s' по слову '%s'\n", 
+           username, keyword);
     
     while (fgets(line, sizeof(line), history_file) != NULL) {
         total_messages++;
-        line[strcspn(line, "\n")] = '\0';
+        line[strcspn(line, "\n")] = '\0';        
+        char* last_colon = strrchr(line, ':');
+        if (last_colon == NULL) {
+            continue;  
+		}
         
-        int is_user_related = 0;
+        char* message_start = last_colon + 2;
+        if (message_start >= line + strlen(line)) {
+            message_start = last_colon + 1;  
+		}
+        char* time_end = strstr(line, "] ");
+        if (time_end == NULL) {
+            continue;  
+		}
         
-        char sender_pattern[USERNAME_LEN + 10];
-        snprintf(sender_pattern, sizeof(sender_pattern), "] %s -> ", username);
+        char* sender_start = time_end + 2;
         
-        char recipient_pattern[USERNAME_LEN + 10];
-        snprintf(recipient_pattern, sizeof(recipient_pattern), " -> %s: ", username);
+        char* arrow = strstr(sender_start, " -> ");
+        if (arrow == NULL) {
+            continue;   
+		}
+        char* recipient_start = arrow + 4;
         
-        if (strstr(line, sender_pattern) != NULL || 
-            strstr(line, recipient_pattern) != NULL) {
-            is_user_related = 1;
+        char sender[USERNAME_LEN] = {0};
+        char recipient[USERNAME_LEN] = {0};
+        
+        size_t sender_len = arrow - sender_start;
+        if (sender_len > 0 && sender_len < sizeof(sender)) {
+            strncpy(sender, sender_start, sender_len);
+            sender[sender_len] = '\0';
         }
         
-        if (is_user_related && 
-            (keyword[0] == '\0' || strstr(line, keyword) != NULL)) {
+        size_t recipient_len = last_colon - recipient_start;
+        if (recipient_len > 0 && recipient_len < sizeof(recipient)) {
+            strncpy(recipient, recipient_start, recipient_len);
+            recipient[recipient_len] = '\0';
+        }
+        
+        if (keyword[0] == '\0') {
             found_count++;
             
-            char temp[BUFFER_SIZE * 2];
             if (found_count <= 20) {
-                snprintf(temp, sizeof(temp), "%d. %s\n", found_count, line);
+                char temp[BUFFER_SIZE * 2];
+                snprintf(temp, sizeof(temp), "%d. %s -> %s: %s\n", 
+                        found_count, sender, recipient, message_start);
                 
                 if (strlen(found_messages) + strlen(temp) < sizeof(found_messages) - 50) {
                     strncat(found_messages, temp, sizeof(found_messages) - strlen(found_messages) - 1);
                 } else {
-                    strncat(found_messages, "... (ещё сообщения не помещаются)\n", 
+                    strncat(found_messages, "... (ограничение вывода)\n", 
                            sizeof(found_messages) - strlen(found_messages) - 1);
                     break;
+                }
+            }
+        } else {
+            if (strstr(message_start, keyword) != NULL) {
+                found_count++;
+                
+                if (found_count <= 20) {
+                    char temp[BUFFER_SIZE * 2];
+                    snprintf(temp, sizeof(temp), "%d. %s -> %s: %s\n", 
+                            found_count, sender, recipient, message_start);
+                    
+                    if (strlen(found_messages) + strlen(temp) < sizeof(found_messages) - 50) {
+                        strncat(found_messages, temp, sizeof(found_messages) - strlen(found_messages) - 1);
+                    } else {
+                        strncat(found_messages, "... (ограничение вывода)\n", 
+                               sizeof(found_messages) - strlen(found_messages) - 1);
+                        break;
+                    }
                 }
             }
         }
@@ -204,31 +246,32 @@ void search_in_history(int fd, const char* username, const char* keyword) {
     if (keyword[0] == '\0') {
         if (found_count == 0) {
             snprintf(result, sizeof(result), 
-                    "В вашей истории нет сообщений\n"
-                    "Всего проверено сообщений: %d", total_messages);
+                    "У вас нет сохранённых сообщений\n"
+                    "Всего сообщений в истории: %d", total_messages);
         } else {
             snprintf(result, sizeof(result), 
-                    "=== Ваша история сообщений (%d из %d найдено) ===\n%s"
-                    "================================================",
-                    found_count, total_messages, found_messages);
+                    "=== История сообщений (%d найдено) ===\n%s"
+                    "======================================",
+                    found_count, found_messages);
         }
     } else {
         if (found_count == 0) {
             snprintf(result, sizeof(result), 
-                    "По запросу '%s' ничего не найдено\n"
-                    "Проверено %d сообщений", keyword, total_messages);
+                    "Фраза '%s' не найдена в тексте ваших сообщений\n"
+                    "Проверено: %d сообщений", keyword, total_messages);
         } else {
             snprintf(result, sizeof(result), 
-                    "=== Результаты поиска '%s' (%d из %d найдено) ===\n%s"
-                    "====================================================",
-                    keyword, found_count, total_messages, found_messages);
+                    "=== Найдено по запросу '%s' (%d совпадений) ===\n%s"
+                    "==================================================",
+                    keyword, found_count, found_messages);
         }
     }
     
     strncpy(response.content, result, BUFFER_SIZE);
     enqueue_message(&message_queue, MSG_TEXT, "SERVER", username, response.content);
     
-    printf("[SEARCH] Найдено %d сообщений для пользователя '%s'\n", found_count, username);
+    printf("[SEARCH] Найдено %d сообщений для '%s' (поиск в тексте)\n", 
+           found_count, username);
 }
 
 void* delivery_thread(void* arg) {

@@ -64,7 +64,6 @@ int enqueue_message(MessageQueue* queue, MessageType type,
     return 0; 
 }
 
-// Получение следующего сообщения для указанного получателя
 int dequeue_for_recipient(MessageQueue* queue, const char* recipient,
                          Message* output, int socket_fd) {
     
@@ -76,7 +75,6 @@ int dequeue_for_recipient(MessageQueue* queue, const char* recipient,
     
     while (current != NULL) {
         if (strcmp(current->recipient, recipient) == 0) {
-            // Нашли сообщение для получателя
             if (output != NULL) {
                 output->type = current->type;
                 strncpy(output->sender, current->sender, USERNAME_LEN);
