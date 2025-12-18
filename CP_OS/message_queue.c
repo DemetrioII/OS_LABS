@@ -23,16 +23,15 @@ int enqueue_message(MessageQueue* queue, MessageType type,
     
     if (queue->count >= MAX_QUEUE_SIZE) {
         pthread_mutex_unlock(&queue->lock);
-        return -1;  // Очередь переполнена
-    }
+        return -1;  
+	}
     
     QueuedMessage* msg = malloc(sizeof(QueuedMessage));
     if (msg == NULL) {
         pthread_mutex_unlock(&queue->lock);
-        return -2;  // Ошибка памяти
+        return -2; 
     }
     
-    // Заполняем поля
     msg->type = type;
     
     strncpy(msg->sender, sender, sizeof(msg->sender)-1);
@@ -47,9 +46,7 @@ int enqueue_message(MessageQueue* queue, MessageType type,
     msg->timestamp = time(NULL);
     msg->next = NULL;
     
-    // Добавляем в конец очереди
     if (queue->tail == NULL) {
-        // Очередь пуста
         queue->head = queue->tail = msg;
     } else {
         queue->tail->next = msg;
@@ -58,14 +55,13 @@ int enqueue_message(MessageQueue* queue, MessageType type,
     
     queue->count++;
     
-    // Сигнализируем, что в очереди появилось сообщение
     pthread_cond_signal(&queue->cond);
     
     printf("[QUEUE] Сообщение добавлено в очередь: %s -> %s (тип: %d, всего: %d)\n",
            sender, recipient, type, queue->count);
     
     pthread_mutex_unlock(&queue->lock);
-    return 0;  // Успех
+    return 0; 
 }
 
 // Получение следующего сообщения для указанного получателя
@@ -89,11 +85,9 @@ int dequeue_for_recipient(MessageQueue* queue, const char* recipient,
                 output->timestamp = current->timestamp;
             }
             
-            // Удаляем из очереди
             QueuedMessage* to_free = current;
             
             if (prev == NULL) {
-                // Удаляем голову
                 queue->head = current->next;
             } else {
                 prev->next = current->next;
@@ -116,10 +110,9 @@ int dequeue_for_recipient(MessageQueue* queue, const char* recipient,
     }
     
     pthread_mutex_unlock(&queue->lock);
-    return found;  // 1 если нашли, 0 если нет
+    return found; 
 }
 
-// Просмотр следующего сообщения для получателя (без удаления)
 QueuedMessage* peek_next_for_recipient(MessageQueue* queue, const char* recipient) {
     pthread_mutex_lock(&queue->lock);
     
@@ -159,7 +152,6 @@ void queue_stats(MessageQueue* queue) {
     printf("=== Статистика очереди ===\n");
     printf("Всего сообщений в очереди: %d\n", queue->count);
     
-    // Группируем по получателям
     QueuedMessage* current = queue->head;
     while (current != NULL) {
         int count_for_user = 0;
@@ -174,7 +166,6 @@ void queue_stats(MessageQueue* queue) {
         
         printf("  Для %s: %d сообщений\n", current->recipient, count_for_user);
         
-        // Пропускаем дубликаты
         while (current->next != NULL && 
                strcmp(current->next->recipient, current->recipient) == 0) {
             current = current->next;

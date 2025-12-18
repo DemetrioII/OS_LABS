@@ -1,0 +1,6 @@
+message_queue.c: In function ‘int enqueue_message(MessageQueue*, MessageType, const char*, const char*, const char*)’:
+message_queue.c:29:32: error: invalid conversion from ‘void*’ to ‘QueuedMessage*’ [-fpermissive]
+   29 |     QueuedMessage* msg = malloc(sizeof(QueuedMessage));
+      |                          ~~~~~~^~~~~~~~~~~~~~~~~~~~~~~
+      |                                |
+      |                                void*

@@ -3,11 +3,10 @@
 
 #include <pthread.h>
 #include <time.h>
-#include "common.h"  // Добавляем для MessageType
+#include "common.h" 
 
-// Структура для сообщения в очереди (расширенная)
 typedef struct QueuedMessage {
-    MessageType type;        // Тип сообщения
+    MessageType type;       
     char sender[USERNAME_LEN];
     char recipient[USERNAME_LEN];
     char content[BUFFER_SIZE];
@@ -15,16 +14,14 @@ typedef struct QueuedMessage {
     struct QueuedMessage* next;
 } QueuedMessage;
 
-// Структура очереди
 typedef struct MessageQueue {
     QueuedMessage* head;
     QueuedMessage* tail;
     int count;
     pthread_mutex_t lock;
-    pthread_cond_t cond;     // Условная переменная для ожидания сообщений
+    pthread_cond_t cond;     
 } MessageQueue;
 
-// Прототипы функций
 void init_queue(MessageQueue* queue);
 int enqueue_message(MessageQueue* queue, MessageType type, 
                    const char* sender, const char* recipient, 
